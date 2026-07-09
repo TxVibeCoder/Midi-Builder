@@ -1,0 +1,372 @@
+{
+ "noteLo": 21,
+ "noteHi": 108,
+ "noteStep": 3,
+ "layers": [
+  60,
+  110
+ ],
+ "layerThreshold": 85,
+ "samples": [
+  {
+   "note": 21,
+   "layer": 60,
+   "file": "v060_n021.mp3",
+   "startOffsetSec": 0.0
+  },
+  {
+   "note": 21,
+   "layer": 110,
+   "file": "v110_n021.mp3",
+   "startOffsetSec": 0.0
+  },
+  {
+   "note": 24,
+   "layer": 60,
+   "file": "v060_n024.mp3",
+   "startOffsetSec": 0.0
+  },
+  {
+   "note": 24,
+   "layer": 110,
+   "file": "v110_n024.mp3",
+   "startOffsetSec": 0.0
+  },
+  {
+   "note": 27,
+   "layer": 60,
+   "file": "v060_n027.mp3",
+   "startOffsetSec": 0.0
+  },
+  {
+   "note": 27,
+   "layer": 110,
+   "file": "v110_n027.mp3",
+   "startOffsetSec": 0.0001
+  },
+  {
+   "note": 30,
+   "layer": 60,
+   "file": "v060_n030.mp3",
+   "startOffsetSec": 0.0
+  },
+  {
+   "note": 30,
+   "layer": 110,
+   "file": "v110_n030.mp3",
+   "startOffsetSec": 0.0
+  },
+  {
+   "note": 33,
+   "layer": 60,
+   "file": "v060_n033.mp3",
+   "startOffsetSec": 0.0
+  },
+  {
+   "note": 33,
+   "layer": 110,
+   "file": "v110_n033.mp3",
+   "startOffsetSec": 0.0
+  },
+  {
+   "note": 36,
+   "layer": 60,
+   "file": "v060_n036.mp3",
+   "startOffsetSec": 0.0
+  },
+  {
+   "note": 36,
+   "layer": 110,
+   "file": "v110_n036.mp3",
+   "startOffsetSec": 0.0
+  },
+  {
+   "note": 39,
+   "layer": 60,
+   "file": "v060_n039.mp3",
+   "startOffsetSec": 0.0001
+  },
+  {
+   "note": 39,
+   "layer": 110,
+   "file": "v110_n039.mp3",
+   "startOffsetSec": 0.0
+  },
+  {
+   "note": 42,
+   "layer": 60,
+   "file": "v060_n042.mp3",
+   "startOffsetSec": 0.0
+  },
+  {
+   "note": 42,
+   "layer": 110,
+   "file": "v110_n042.mp3",
+   "startOffsetSec": 0.0
+  },
+  {
+   "note": 45,
+   "layer": 60,
+   "file": "v060_n045.mp3",
+   "startOffsetSec": 0.0004
+  },
+  {
+   "note": 45,
+   "layer": 110,
+   "file": "v110_n045.mp3",
+   "startOffsetSec": 0.0004
+  },
+  {
+   "note": 48,
+   "layer": 60,
+   "file": "v060_n048.mp3",
+   "startOffsetSec": 0.0
+  },
+  {
+   "note": 48,
+   "layer": 110,
+   "file": "v110_n048.mp3",
+   "startOffsetSec": 0.0003
+  },
+  {
+   "note": 51,
+   "layer": 60,
+   "file": "v060_n051.mp3",
+   "startOffsetSec": 0.0
+  },
+  {
+   "note": 51,
+   "layer": 110,
+   "file": "v110_n051.mp3",
+   "startOffsetSec": 0.0
+  },
+  {
+   "note": 54,
+   "layer": 60,
+   "file": "v060_n054.mp3",
+   "startOffsetSec": 0.0
+  },
+  {
+   "note": 54,
+   "layer": 110,
+   "file": "v110_n054.mp3",
+   "startOffsetSec": 0.0
+  },
+  {
+   "note": 57,
+   "layer": 60,
+   "file": "v060_n057.mp3",
+   "startOffsetSec": 0.0001
+  },
+  {
+   "note": 57,
+   "layer": 110,
+   "file": "v110_n057.mp3",
+   "startOffsetSec": 0.0
+  },
+  {
+   "note": 60,
+   "layer": 60,
+   "file": "v060_n060.mp3",
+   "startOffsetSec": 0.0
+  },
+  {
+   "note": 60,
+   "layer": 110,
+   "file": "v110_n060.mp3",
+   "startOffsetSec": 0.0
+  },
+  {
+   "note": 63,
+   "layer": 60,
+   "file": "v060_n063.mp3",
+   "startOffsetSec": 0.0
+  },
+  {
+   "note": 63,
+   "layer": 110,
+   "file": "v110_n063.mp3",
+   "startOffsetSec": 0.0
+  },
+  {
+   "note": 66,
+   "layer": 60,
+   "file": "v060_n066.mp3",
+   "startOffsetSec": 0.0
+  },
+  {
+   "note": 66,
+   "layer": 110,
+   "file": "v110_n066.mp3",
+   "startOffsetSec": 0.0
+  },
+  {
+   "note": 69,
+   "layer": 60,
+   "file": "v060_n069.mp3",
+   "startOffsetSec": 0.0
+  },
+  {
+   "note": 69,
+   "layer": 110,
+   "file": "v110_n069.mp3",
+   "startOffsetSec": 0.0
+  },
+  {
+   "note": 72,
+   "layer": 60,
+   "file": "v060_n072.mp3",
+   "startOffsetSec": 0.0
+  },
+  {
+   "note": 72,
+   "layer": 110,
+   "file": "v110_n072.mp3",
+   "startOffsetSec": 0.0005
+  },
+  {
+   "note": 75,
+   "layer": 60,
+   "file": "v060_n075.mp3",
+   "startOffsetSec": 0.0017
+  },
+  {
+   "note": 75,
+   "layer": 110,
+   "file": "v110_n075.mp3",
+   "startOffsetSec": 0.0002
+  },
+  {
+   "note": 78,
+   "layer": 60,
+   "file": "v060_n078.mp3",
+   "startOffsetSec": 0.0
+  },
+  {
+   "note": 78,
+   "layer": 110,
+   "file": "v110_n078.mp3",
+   "startOffsetSec": 0.0008
+  },
+  {
+   "note": 81,
+   "layer": 60,
+   "file": "v060_n081.mp3",
+   "startOffsetSec": 0.0
+  },
+  {
+   "note": 81,
+   "layer": 110,
+   "file": "v110_n081.mp3",
+   "startOffsetSec": 0.0001
+  },
+  {
+   "note": 84,
+   "layer": 60,
+   "file": "v060_n084.mp3",
+   "startOffsetSec": 0.0
+  },
+  {
+   "note": 84,
+   "layer": 110,
+   "file": "v110_n084.mp3",
+   "startOffsetSec": 0.0
+  },
+  {
+   "note": 87,
+   "layer": 60,
+   "file": "v060_n087.mp3",
+   "startOffsetSec": 0.0
+  },
+  {
+   "note": 87,
+   "layer": 110,
+   "file": "v110_n087.mp3",
+   "startOffsetSec": 0.0
+  },
+  {
+   "note": 90,
+   "layer": 60,
+   "file": "v060_n090.mp3",
+   "startOffsetSec": 0.0001
+  },
+  {
+   "note": 90,
+   "layer": 110,
+   "file": "v110_n090.mp3",
+   "startOffsetSec": 0.0
+  },
+  {
+   "note": 93,
+   "layer": 60,
+   "file": "v060_n093.mp3",
+   "startOffsetSec": 0.0003
+  },
+  {
+   "note": 93,
+   "layer": 110,
+   "file": "v110_n093.mp3",
+   "startOffsetSec": 0.0003
+  },
+  {
+   "note": 96,
+   "layer": 60,
+   "file": "v060_n096.mp3",
+   "startOffsetSec": 0.0
+  },
+  {
+   "note": 96,
+   "layer": 110,
+   "file": "v110_n096.mp3",
+   "startOffsetSec": 0.0
+  },
+  {
+   "note": 99,
+   "layer": 60,
+   "file": "v060_n099.mp3",
+   "startOffsetSec": 0.0002
+  },
+  {
+   "note": 99,
+   "layer": 110,
+   "file": "v110_n099.mp3",
+   "startOffsetSec": 0.0
+  },
+  {
+   "note": 102,
+   "layer": 60,
+   "file": "v060_n102.mp3",
+   "startOffsetSec": 0.0001
+  },
+  {
+   "note": 102,
+   "layer": 110,
+   "file": "v110_n102.mp3",
+   "startOffsetSec": 0.0
+  },
+  {
+   "note": 105,
+   "layer": 60,
+   "file": "v060_n105.mp3",
+   "startOffsetSec": 0.0001
+  },
+  {
+   "note": 105,
+   "layer": 110,
+   "file": "v110_n105.mp3",
+   "startOffsetSec": 0.0
+  },
+  {
+   "note": 108,
+   "layer": 60,
+   "file": "v060_n108.mp3",
+   "startOffsetSec": 0.0004
+  },
+  {
+   "note": 108,
+   "layer": 110,
+   "file": "v110_n108.mp3",
+   "startOffsetSec": 0.0001
+  }
+ ]
+}

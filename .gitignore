@@ -1,0 +1,26 @@
+# Secrets / env
+.env
+.env.*
+*.pem
+*.key
+*credentials*.json
+*secret*
+
+# Python
+__pycache__/
+*.py[cod]
+.venv/
+venv/
+
+# Generated takes (audio/MIDI output is scratch, not source)
+output/
+
+# Intermediate sample-render scratch (final MP3s in web/samples/ ARE committed)
+tools/_scratch/
+
+# OS / editor cruft
+Thumbs.db
+.DS_Store
+*.swp
+.vscode/
+.idea/

@@ -1,0 +1,88 @@
+* { box-sizing: border-box; margin: 0; }
+
+html, body { height: 100%; overflow: hidden; }
+body {
+  display: flex;
+  flex-direction: column;
+  background: #17181c;
+  color: #d8d6d0;
+  font: 13px/1.4 "Segoe UI", system-ui, sans-serif;
+}
+
+/* ---------- top bar ---------- */
+#topbar {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+  padding: 8px 12px;
+  background: #202127;
+  border-bottom: 1px solid #000;
+}
+.brand { font-weight: 700; letter-spacing: 0.08em; color: #e8a33d; margin-right: 4px; }
+.btn {
+  background: #2e3038; color: #d8d6d0; border: 1px solid #43454f;
+  border-radius: 6px; padding: 5px 12px; cursor: pointer; font: inherit;
+}
+.btn:hover { background: #383b45; }
+.btn.big { font-size: 18px; padding: 10px 34px; }
+.btn.subtle { opacity: 0.7; }
+.btn.recording { background: #8c2430; border-color: #c04252; color: #fff; }
+.btn.toggle.active { background: #3d5a3d; border-color: #5d8a5d; }
+.field { display: inline-flex; align-items: center; gap: 5px; color: #9a988f; }
+.field input[type="number"] { width: 56px; }
+input, select {
+  background: #17181c; color: #d8d6d0; border: 1px solid #43454f;
+  border-radius: 4px; padding: 4px 6px; font: inherit;
+}
+#takename { width: 110px; }
+.clock { min-width: 110px; color: #e8d9ad; font-variant-numeric: tabular-nums; }
+.group {
+  display: inline-flex; align-items: center; gap: 6px;
+  padding: 3px 8px; border: 1px solid #33353d; border-radius: 8px;
+}
+.grouplabel { color: #82807a; font-size: 11px; text-transform: uppercase; letter-spacing: 0.06em; }
+.octave { color: #b9b7ae; font-variant-numeric: tabular-nums; }
+.chips { display: inline-flex; gap: 4px; }
+.chip {
+  border: 1px solid var(--c); color: var(--c); background: transparent;
+  border-radius: 999px; padding: 2px 9px; cursor: pointer; font: inherit; font-size: 12px;
+}
+.chip.active { background: var(--c); color: #17181c; font-weight: 600; }
+
+/* ---------- side panel ---------- */
+#side {
+  position: absolute; top: 96px; right: 10px; z-index: 5;
+  width: 220px; padding: 10px;
+  background: rgba(24, 25, 30, 0.88); border: 1px solid #33353d; border-radius: 10px;
+}
+.sidetitle { font-size: 11px; text-transform: uppercase; letter-spacing: 0.06em; color: #82807a; margin-bottom: 4px; }
+#takelist { list-style: none; font-size: 12px; color: #b9b7ae; max-height: 130px; overflow-y: auto; }
+#takelist li { padding: 1px 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+#status { margin-top: 8px; color: #e8d9ad; min-height: 18px; }
+.help { margin-top: 8px; font-size: 11px; color: #6f6d67; }
+
+/* ---------- roll + keyboard ---------- */
+#rollwrap { flex: 1; min-height: 0; background: linear-gradient(#141519, #191b20); }
+#roll { display: block; width: 100%; height: 100%; }
+
+#keys { display: block; width: 100%; flex-shrink: 0; background: #0c0c0d; }
+.key { cursor: pointer; }
+.key.white.pressed { fill: url(#whiteDown); transform: translateY(2px); }
+.key.black.pressed rect:first-child { fill: url(#blackDown); }
+.key.black.pressed { transform: translateY(1.5px); }
+.keylabel { font: 10px "Segoe UI", sans-serif; opacity: 0.85; }
+.keylabel.on-white.lh { fill: #2f7d8c; }
+.keylabel.on-white.rh { fill: #b0762a; }
+.keylabel.on-black.lh { fill: #7fd4e4; }
+.keylabel.on-black.rh { fill: #f0b76a; }
+
+/* ---------- start overlay ---------- */
+#overlay {
+  position: fixed; inset: 0; z-index: 10;
+  display: flex; align-items: center; justify-content: center;
+  background: rgba(10, 10, 12, 0.92);
+}
+#overlay .card { text-align: center; }
+#overlay h1 { color: #e8a33d; letter-spacing: 0.1em; margin-bottom: 8px; }
+#overlay p { color: #9a988f; margin-bottom: 18px; }

@@ -1,0 +1,73 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>KeyPlay</title>
+<link rel="stylesheet" href="css/app.css">
+</head>
+<body>
+  <header id="topbar">
+    <span class="brand">KeyPlay</span>
+    <button id="rec" class="btn">● Record</button>
+    <button id="play" class="btn">▶ Play</button>
+    <button id="metro" class="btn toggle" title="Metronome (F10)">🕘 Click</button>
+    <label class="field">BPM <input id="bpm" type="number" min="30" max="260" value="120"></label>
+    <span id="clock" class="clock"></span>
+
+    <span class="group">
+      <span class="grouplabel">Left hand</span>
+      <span id="oct-L" class="octave"></span>
+      <span id="chips-L" class="chips"></span>
+    </span>
+    <span class="group">
+      <span class="grouplabel">Right hand</span>
+      <span id="oct-R" class="octave"></span>
+      <span id="chips-R" class="chips"></span>
+    </span>
+
+    <span class="group">
+      <label class="field">Quantize
+        <select id="quantize">
+          <option value="0">off</option>
+          <option value="0.125">1/8</option>
+          <option value="0.0625">1/16</option>
+        </select>
+      </label>
+      <label class="field">Strength <input id="qstrength" type="range" min="0" max="100" value="100"></label>
+    </span>
+
+    <span class="group">
+      <input id="takename" type="text" placeholder="take name" value="take">
+      <button id="save" class="btn">Save .mid</button>
+      <button id="discard" class="btn subtle">Discard</button>
+      <button id="labels" class="btn subtle" title="Toggle key hints">ABC</button>
+    </span>
+  </header>
+
+  <div id="side">
+    <div class="sidetitle">Saved takes</div>
+    <ul id="takelist"></ul>
+    <div id="status"></div>
+    <div class="help">
+      Space record · Enter play · Esc stop<br>
+      F5–F8 feel · F10 click · ←→ LH oct · ↑↓ RH oct<br>
+      LH: Z-row (A-row sharps) · RH: Q-row (numbers sharps)
+    </div>
+  </div>
+
+  <main id="rollwrap"><canvas id="roll"></canvas></main>
+
+  <svg id="keys" xmlns="http://www.w3.org/2000/svg"></svg>
+
+  <div id="overlay">
+    <div class="card">
+      <h1>KeyPlay</h1>
+      <p>Play piano from your typing keyboard, watch the roll rise, save the take as MIDI.</p>
+      <button id="start" class="btn big">Start</button>
+    </div>
+  </div>
+
+  <script type="module" src="js/app.js"></script>
+</body>
+</html>

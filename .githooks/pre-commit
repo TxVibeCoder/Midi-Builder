@@ -1,0 +1,46 @@
+#!/bin/sh
+# Blocks commits that introduce secrets or oversized files. Install with:
+#   git config core.hooksPath .githooks
+set -e
+
+MAX_BYTES=5242880  # 5 MB
+staged=$(git diff --cached --name-only --diff-filter=ACM)
+[ -z "$staged" ] && exit 0
+
+fail=0
+
+for f in $staged; do
+    case "$f" in
+        *.env|*.env.*|*.pem|*.key|*credentials*.json|*secret*)
+            echo "BLOCKED: '$f' matches a secrets pattern (.env/.pem/.key/credentials/secret)." >&2
+            fail=1
+            ;;
+    esac
+
+    if [ -f "$f" ]; then
+        size=$(wc -c < "$f" | tr -d ' ')
+        if [ "$size" -gt "$MAX_BYTES" ]; then
+            echo "BLOCKED: '$f' is $size bytes, over the ${MAX_BYTES}-byte limit. Generated audio/MIDI belongs in output/ (gitignored), not tracked history." >&2
+            fail=1
+        fi
+    fi
+done
+
+secret_pattern='(AKIA[0-9A-Z]{16}|-----BEGIN [A-Z ]*PRIVATE KEY-----|xox[baprs]-[0-9A-Za-z-]{10,}|sk-[A-Za-z0-9]{20,}|api[_-]?key["\x27]?\s*[:=]\s*["\x27][A-Za-z0-9_\-]{16,}["\x27])'
+
+for f in $staged; do
+    [ -f "$f" ] || continue
+    match=$(git diff --cached -- "$f" | grep -Eino "$secret_pattern" | head -1) || true
+    if [ -n "$match" ]; then
+        echo "BLOCKED: '$f' appears to contain a secret-like string ($match). Remove it before committing." >&2
+        fail=1
+    fi
+done
+
+if [ "$fail" -ne 0 ]; then
+    echo "" >&2
+    echo "Commit rejected by .githooks/pre-commit. Fix the above or, if this is a genuine false positive, commit with --no-verify (only after confirming with the user)." >&2
+    exit 1
+fi
+
+exit 0

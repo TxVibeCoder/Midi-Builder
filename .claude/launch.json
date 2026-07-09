@@ -1,0 +1,11 @@
+{
+  "version": "0.0.1",
+  "configurations": [
+    {
+      "name": "keyplay",
+      "runtimeExecutable": "python",
+      "runtimeArgs": ["-c", "import sys; sys.path.insert(0, r'C:\\Users\\wba\\Documents\\KeyPlay'); from keyplay.server import app, PORT; app.run(host='127.0.0.1', port=PORT)"],
+      "port": 8737
+    }
+  ]
+}
