@@ -29,9 +29,53 @@ export class Roll {
     this.pxPerBeat = Math.min(160, Math.max(16, this.pxPerBeat * (delta > 0 ? 0.85 : 1.18)));
   }
 
+  // ms<->px, using the idle/play orientation (nowMs origin baked in by caller).
+  _pxPerMs(bpm) {
+    return this.pxPerBeat / (60000 / bpm);
+  }
+
+  // Idle-editing coordinate maps (drawIdle draws in play mode at nowMs = 0, so
+  // t=0 sits on the now-line at the bottom and time increases upward).
+  yToTime(y, bpm) {
+    return (this.h - y) / this._pxPerMs(bpm);
+  }
+  timeToY(t, bpm) {
+    return this.h - t * this._pxPerMs(bpm);
+  }
+
+  // Which pitch column contains x (black keys tested first — they sit on top).
+  pitchAt(x) {
+    if (!this.columnFor) return null;
+    for (const black of [true, false]) {
+      for (let n = 21; n <= 108; n++) {
+        const col = this.columnFor(n);
+        if (col && col.black === black && x >= col.x && x <= col.x + col.w) return n;
+      }
+    }
+    return null;
+  }
+
+  // Hit-test a note for editing. Returns {note, region:'end'|'body'} or null.
+  // 'end' = near the note's top edge (its tOff) -> resize length.
+  hitTest(x, y, notes, bpm) {
+    const RESIZE_PX = 7;
+    for (let i = notes.length - 1; i >= 0; i--) {
+      const n = notes[i];
+      const col = this.columnFor && this.columnFor(n.note);
+      if (!col || x < col.x || x > col.x + col.w) continue;
+      const top = this.timeToY(n.tOffMs, bpm);
+      const bottom = this.timeToY(n.tOnMs, bpm);
+      if (y >= top - 3 && y <= bottom + 3) {
+        return { note: n, region: y <= top + RESIZE_PX ? "end" : "body" };
+      }
+    }
+    return null;
+  }
+
   // mode: "record" (past scrolls up from the now-line) | "play" (future falls down)
-  // nowMs: current transport position; notes: committed notes; held: in-flight notes
-  draw({ mode, nowMs, notes, held, bpm }) {
+  // notes: committed notes; held: in-flight notes; ghost: faded pre-existing take
+  // (overdub reference); selected: a note drawn with an edit highlight.
+  draw({ mode, nowMs, notes, held, bpm, ghost, selected }) {
     const { ctx, w, h } = this;
     const msPerBeat = 60000 / bpm;
     const pxPerMs = this.pxPerBeat / msPerBeat;
@@ -69,7 +113,7 @@ export class Roll {
       ctx.stroke();
     }
 
-    const drawNote = (n, tOff) => {
+    const drawNote = (n, tOff, alpha) => {
       const col = this.columnFor && this.columnFor(n.note);
       if (!col) return;
       let y1 = yForTime(n.tOnMs);
@@ -83,6 +127,7 @@ export class Roll {
       const x = col.x + 1;
       const width = col.w - 2;
       const height = Math.max(4, bottom - top);
+      ctx.globalAlpha = alpha;
       ctx.fillStyle = feel.color;
       ctx.strokeStyle = n.hand === "L" ? "rgba(255,255,255,0.85)" : "rgba(0,0,0,0.55)";
       ctx.lineWidth = 1.4;
@@ -90,18 +135,29 @@ export class Roll {
       ctx.roundRect(x, top, width, height, 3);
       ctx.fill();
       ctx.stroke();
+      if (n === selected) {
+        ctx.globalAlpha = 1;
+        ctx.strokeStyle = "#fff";
+        ctx.lineWidth = 2;
+        ctx.stroke();
+        // resize handle at the end (top) edge
+        ctx.fillStyle = "rgba(255,255,255,0.9)";
+        ctx.fillRect(x, top, width, 2.5);
+      }
+      ctx.globalAlpha = 1;
     };
 
-    for (const n of notes) drawNote(n, n.tOffMs);
-    if (held) for (const n of held) drawNote(n, nowMs); // growing from the now-line
+    if (ghost) for (const n of ghost) drawNote(n, n.tOffMs, 0.4); // overdub reference
+    for (const n of notes) drawNote(n, n.tOffMs, 1);
+    if (held) for (const n of held) drawNote(n, nowMs, 1); // growing from the now-line
 
     // fixed now-line at the bottom edge
     ctx.fillStyle = "rgba(255, 235, 180, 0.9)";
     ctx.fillRect(0, h - 2, w, 2);
   }
 
-  drawIdle(notes, bpm) {
+  drawIdle(notes, bpm, selected) {
     // idle: show the finished take resting above the keys (as if paused at 0 in play mode)
-    this.draw({ mode: "play", nowMs: 0, notes, held: null, bpm });
+    this.draw({ mode: "play", nowMs: 0, notes, held: null, bpm, selected });
   }
 }

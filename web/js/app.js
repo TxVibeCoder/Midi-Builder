@@ -3,9 +3,11 @@ import { FEELS, feelById, computeVelocity } from "./feel.js";
 import { initAudio, noteOn, noteOff, allNotesOff, audioTime } from "./audio.js";
 import { Keyboard } from "./keyboard.js";
 import { Roll } from "./roll.js";
+import { NoteStrip } from "./strip.js";
 import { Recorder, quantizeNotes } from "./recorder.js";
 
 const $ = (id) => document.getElementById(id);
+const DEFAULT_NOTE_LEN_BEATS = 1; // length of a click-added note before dragging
 
 const state = {
   octaveShifts: { L: 0, R: 0 },
@@ -13,12 +15,17 @@ const state = {
   mode: "idle", // idle | record | play
   take: [],     // last committed take's notes
   showLabels: true,
+  overdub: true,       // layer new recordings onto the existing take
+  overdubVoices: [],   // scheduled playback voices during an overdub pass
+  selected: null,      // note object being edited
+  drag: null,          // active roll edit gesture
   playStartTime: 0, // AudioContext time of playback beat 0
   playVoices: [],
 };
 
 const keyboard = new Keyboard($("keys"));
 const roll = new Roll($("roll"));
+const strip = new NoteStrip($("notestrip"));
 const recorder = new Recorder();
 const activeVoices = new Map(); // key -> {voiceId, note}
 
@@ -30,6 +37,8 @@ function layout() {
   $("keys").style.height = `${kbdH}px`;
   keyboard.render(width, kbdH);
   roll.columnFor = (n) => keyboard.columnFor(n);
+  strip.columnFor = (n) => keyboard.columnFor(n);
+  strip.resize(width, $("notestrip").clientHeight);
   const rollH = $("roll").parentElement.clientHeight;
   roll.resize(width, rollH);
   refreshLabels();
@@ -77,6 +86,13 @@ keyboard.onNote = (note, down) => {
   else releaseNote(key);
 };
 
+// the note-name strip doubles as a click-to-audition / mouse-entry surface
+strip.onNote = (note, down) => {
+  const key = `strip:${note}`;
+  if (down) pressNote(key, note < 60 ? "L" : "R", note);
+  else releaseNote(key);
+};
+
 // ---------- keyboard events ----------
 
 const FEEL_FKEYS = { F5: 0, F6: 1, F7: 2, F8: 3 };
@@ -92,9 +108,14 @@ window.addEventListener("keydown", (e) => {
   if (e.repeat || e.ctrlKey || e.altKey || e.metaKey) return;
   if (e.target instanceof Element && e.target.matches("input, textarea, select")) return;
 
+  if ((e.code === "Delete" || e.code === "Backspace") && state.mode === "idle" && state.selected) {
+    e.preventDefault();
+    deleteNote(state.selected);
+    return;
+  }
   if (e.code === "Space") { e.preventDefault(); toggleRecord(); return; }
   if (e.code === "Enter") { e.preventDefault(); startPlayback(); return; }
-  if (e.code === "Escape") { stopAll(); return; }
+  if (e.code === "Escape") { state.selected = null; stopAll(); return; }
   if (e.code === "F10") { e.preventDefault(); recorder.metronome = !recorder.metronome; syncUi(); return; }
   if (e.code in FEEL_FKEYS) {
     e.preventDefault();
@@ -124,21 +145,54 @@ document.addEventListener("visibilitychange", () => {
 
 // ---------- transport ----------
 
+function scheduleTake(startTime) {
+  // schedule every take note for audible playback from startTime (AudioContext time)
+  const voices = [];
+  for (const n of state.take) {
+    const voiceId = noteOn(n.note, n.velocity, startTime + n.tOnMs / 1000);
+    if (voiceId !== null) {
+      noteOff(voiceId, startTime + n.tOffMs / 1000);
+      voices.push(voiceId);
+    }
+  }
+  return voices;
+}
+
+function isOverdub() {
+  return state.overdub && state.take.length > 0;
+}
+
 function toggleRecord() {
   if (state.mode === "record") return stopRecord();
   if (state.mode === "play") stopAll();
+  state.selected = null;
   recorder.bpm = Number($("bpm").value) || 120;
   recorder.start();
+  // overdub: hear the existing take play back while you record the new pass
+  state.overdubVoices = isOverdub() ? scheduleTake(recorder.startTime) : [];
   state.mode = "record";
   syncUi();
 }
 
 function stopRecord() {
-  state.take = recorder.stop();
+  const newNotes = recorder.stop();
+  for (const v of state.overdubVoices) noteOff(v); // cancel any still-scheduled playback
+  state.overdubVoices = [];
   state.mode = "idle";
   flushAllNotes();
+
+  if (isOverdub()) {
+    if (newNotes.length) {
+      state.take = [...state.take, ...newNotes].sort((a, b) => a.tOnMs - b.tOnMs);
+      setStatus(`overdubbed ${newNotes.length} notes — take now ${state.take.length}`);
+    } else {
+      setStatus("overdub pass added nothing — take unchanged");
+    }
+  } else {
+    state.take = newNotes;
+    setStatus(newNotes.length ? `${newNotes.length} notes captured — Enter to play, or edit the roll` : "empty take discarded");
+  }
   syncUi();
-  setStatus(state.take.length ? `${state.take.length} notes captured — Save or play it back (Enter)` : "empty take discarded");
 }
 
 function startPlayback() {
@@ -146,16 +200,7 @@ function startPlayback() {
   const bpm = Number($("bpm").value) || 120;
   state.mode = "play";
   state.playStartTime = audioTime() + 0.15;
-  state.playVoices = [];
-  for (const n of state.take) {
-    const at = state.playStartTime + n.tOnMs / 1000;
-    const off = state.playStartTime + n.tOffMs / 1000;
-    const voiceId = noteOn(n.note, n.velocity, at);
-    if (voiceId !== null) {
-      noteOff(voiceId, off);
-      state.playVoices.push(n);
-    }
-  }
+  state.playVoices = scheduleTake(state.playStartTime);
   syncUi();
 }
 
@@ -205,6 +250,7 @@ function frame() {
 
 function frameBody() {
   recorder.tick();
+  const active = new Set([...activeVoices.values()].map((v) => v.note));
   if (state.mode === "record") {
     roll.draw({
       mode: "record",
@@ -212,6 +258,7 @@ function frameBody() {
       notes: recorder.notes,
       held: [...recorder.held.values()],
       bpm: recorder.bpm,
+      ghost: isOverdub() ? state.take : null,
     });
     $("clock").textContent = fmtClock(recorder.nowMs, recorder.bpm);
   } else if (state.mode === "play") {
@@ -219,14 +266,17 @@ function frameBody() {
     const bpm = Number($("bpm").value) || 120;
     roll.draw({ mode: "play", nowMs, notes: state.take, held: null, bpm });
     for (const n of state.take) {
-      keyboard.setPressed(n.note, nowMs >= n.tOnMs && nowMs < n.tOffMs);
+      const on = nowMs >= n.tOnMs && nowMs < n.tOffMs;
+      keyboard.setPressed(n.note, on);
+      if (on) active.add(n.note);
     }
     $("clock").textContent = fmtClock(nowMs, bpm);
     const end = Math.max(...state.take.map((n) => n.tOffMs));
     if (nowMs > end + 400) stopAll();
   } else {
-    roll.drawIdle(state.take, Number($("bpm").value) || 120);
+    roll.drawIdle(state.take, Number($("bpm").value) || 120, state.selected);
   }
+  strip.render(active);
 }
 
 function fmtClock(ms, bpm) {
@@ -247,10 +297,11 @@ function feelChips(hand) {
 function syncUi() {
   $("chips-L").innerHTML = feelChips("L");
   $("chips-R").innerHTML = feelChips("R");
-  $("rec").textContent = state.mode === "record" ? "■ Stop" : "● Record";
+  $("rec").textContent = state.mode === "record" ? "■ Stop" : (isOverdub() ? "● Overdub" : "● Record");
   $("rec").classList.toggle("recording", state.mode === "record");
   $("play").textContent = state.mode === "play" ? "■ Stop" : "▶ Play";
   $("metro").classList.toggle("active", recorder.metronome);
+  $("overdub").classList.toggle("active", state.overdub);
   updateStatus();
 }
 
@@ -275,11 +326,124 @@ document.addEventListener("click", (e) => {
 $("rec").onclick = toggleRecord;
 $("play").onclick = () => (state.mode === "play" ? stopAll() : startPlayback());
 $("save").onclick = saveTake;
-$("discard").onclick = () => { state.take = []; setStatus("take discarded"); };
+$("discard").onclick = () => { state.take = []; state.selected = null; setStatus("take discarded"); };
 $("metro").onclick = () => { recorder.metronome = !recorder.metronome; syncUi(); };
+$("overdub").onclick = () => { state.overdub = !state.overdub; syncUi(); };
 $("labels").onclick = () => { state.showLabels = !state.showLabels; refreshLabels(); };
 $("roll").addEventListener("wheel", (e) => { e.preventDefault(); roll.zoom(e.deltaY > 0 ? -1 : 1); }, { passive: false });
 window.addEventListener("resize", layout);
+
+// ---------- roll editing (idle only): select / move / resize / add / delete ----------
+
+let previewVoice = null;
+let previewTimer = null;
+function previewNote(note, velocity) {
+  if (previewVoice) noteOff(previewVoice);
+  if (previewTimer) clearTimeout(previewTimer);
+  previewVoice = noteOn(note, velocity);
+  previewTimer = setTimeout(() => {
+    if (previewVoice) { noteOff(previewVoice); previewVoice = null; }
+  }, 320);
+}
+
+function deleteNote(note) {
+  const i = state.take.indexOf(note);
+  if (i >= 0) state.take.splice(i, 1);
+  if (state.selected === note) state.selected = null;
+  setStatus(`deleted note — ${state.take.length} left`);
+}
+
+function currentBpm() {
+  return Number($("bpm").value) || 120;
+}
+
+const rollCanvas = $("roll");
+
+rollCanvas.addEventListener("contextmenu", (e) => {
+  e.preventDefault();
+  if (state.mode !== "idle") return;
+  const hit = roll.hitTest(e.offsetX, e.offsetY, state.take, currentBpm());
+  if (hit) deleteNote(hit.note);
+});
+
+rollCanvas.addEventListener("pointerdown", (e) => {
+  if (state.mode !== "idle" || e.button !== 0) return;
+  const bpm = currentBpm();
+  const hit = roll.hitTest(e.offsetX, e.offsetY, state.take, bpm);
+  try { rollCanvas.setPointerCapture(e.pointerId); } catch {}
+
+  if (hit) {
+    state.selected = hit.note;
+    if (hit.region === "end") {
+      state.drag = { kind: "resize", note: hit.note };
+    } else {
+      state.drag = {
+        kind: "move", note: hit.note,
+        grabTime: roll.yToTime(e.offsetY, bpm),
+        origOn: hit.note.tOnMs, origOff: hit.note.tOffMs,
+      };
+    }
+    return;
+  }
+
+  // empty space -> add a note at this pitch/time and drag its length
+  const pitch = roll.pitchAt(e.offsetX);
+  if (pitch === null) return;
+  const t = Math.max(0, roll.yToTime(e.offsetY, bpm));
+  const hand = pitch < 60 ? "L" : "R";
+  const feel = feelById(state.feels[hand]);
+  const velocity = computeVelocity(feel, null);
+  const minLen = 40;
+  const note = { note: pitch, velocity, hand, feel: feel.id, tOnMs: Math.round(t), tOffMs: Math.round(t) + minLen };
+  state.take.push(note);
+  state.selected = note;
+  state.drag = { kind: "draw", note, anchorTime: t };
+  previewNote(pitch, velocity);
+});
+
+rollCanvas.addEventListener("pointermove", (e) => {
+  const bpm = currentBpm();
+  if (!state.drag) {
+    // hover cursor feedback
+    if (state.mode !== "idle") { rollCanvas.style.cursor = "default"; return; }
+    const hit = roll.hitTest(e.offsetX, e.offsetY, state.take, bpm);
+    rollCanvas.style.cursor = hit ? (hit.region === "end" ? "ns-resize" : "grab")
+      : (roll.pitchAt(e.offsetX) !== null ? "crosshair" : "default");
+    return;
+  }
+
+  const d = state.drag;
+  const t = roll.yToTime(e.offsetY, bpm);
+  if (d.kind === "resize") {
+    d.note.tOffMs = Math.round(Math.max(d.note.tOnMs + 40, t));
+  } else if (d.kind === "draw") {
+    d.note.tOffMs = Math.round(Math.max(d.anchorTime + 40, t));
+  } else if (d.kind === "move") {
+    const len = d.origOff - d.origOn;
+    const newOn = Math.max(0, d.origOn + (t - d.grabTime));
+    d.note.tOnMs = Math.round(newOn);
+    d.note.tOffMs = Math.round(newOn + len);
+    const pitch = roll.pitchAt(e.offsetX);
+    if (pitch !== null && pitch !== d.note.note) {
+      d.note.note = pitch;
+      d.note.hand = pitch < 60 ? "L" : "R";
+      previewNote(pitch, d.note.velocity);
+    }
+  }
+});
+
+function endDrag(e) {
+  if (!state.drag) return;
+  const d = state.drag;
+  if (d.kind === "draw" && d.note.tOffMs - d.note.tOnMs <= 45) {
+    // a click without a drag -> give it a default length
+    d.note.tOffMs = d.note.tOnMs + Math.round((60000 / currentBpm()) * DEFAULT_NOTE_LEN_BEATS);
+  }
+  state.drag = null;
+  rollCanvas.style.cursor = "default";
+}
+rollCanvas.addEventListener("pointerup", endDrag);
+rollCanvas.addEventListener("pointercancel", endDrag);
 
 // ---------- boot ----------
 

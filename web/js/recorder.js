@@ -22,6 +22,11 @@ export class Recorder {
     return (audioTime() - this._startTime) * 1000;
   }
 
+  // AudioContext time of recording beat 0 — used to schedule overdub playback.
+  get startTime() {
+    return this._startTime;
+  }
+
   beatPos() {
     return this.nowMs / (60000 / this.bpm);
   }

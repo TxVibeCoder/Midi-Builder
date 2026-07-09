@@ -119,7 +119,7 @@ export class Keyboard {
     svg.onpointerdown = (e) => {
       const keyEl = e.target.closest(".key");
       if (!keyEl || !this.onNote) return;
-      svg.setPointerCapture(e.pointerId);
+      try { svg.setPointerCapture(e.pointerId); } catch {}
       this._mouseNote = Number(keyEl.dataset.note);
       this.onNote(this._mouseNote, true);
     };

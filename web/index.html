@@ -11,6 +11,7 @@
     <span class="brand">KeyPlay</span>
     <button id="rec" class="btn">● Record</button>
     <button id="play" class="btn">▶ Play</button>
+    <button id="overdub" class="btn toggle" title="Overdub: layer new recordings onto the take (e.g. LH then RH)">⧉ Overdub</button>
     <button id="metro" class="btn toggle" title="Metronome (F10)">🕘 Click</button>
     <label class="field">BPM <input id="bpm" type="number" min="30" max="260" value="120"></label>
     <span id="clock" class="clock"></span>
@@ -52,11 +53,16 @@
     <div class="help">
       Space record · Enter play · Esc stop<br>
       F5–F8 feel · F10 click · ←→ LH oct · ↑↓ RH oct<br>
-      LH: Z-row (A-row sharps) · RH: Q-row (numbers sharps)
+      LH: Z-row (A-row sharps) · RH: Q-row (numbers sharps)<br>
+      <b>Overdub</b> on = new pass layers onto the take.<br>
+      <b>Edit roll:</b> drag note = move · drag top edge = length ·
+      click empty = add · right-click / Del = delete
     </div>
   </div>
 
   <main id="rollwrap"><canvas id="roll"></canvas></main>
+
+  <canvas id="notestrip" title="Note names — click to hear a pitch"></canvas>
 
   <svg id="keys" xmlns="http://www.w3.org/2000/svg"></svg>
 
