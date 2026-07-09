@@ -14,6 +14,10 @@ Opens `http://127.0.0.1:8737/` in your browser. Windows and Mac — the piano
 samples are pre-rendered and committed (`web/samples/`), so nothing beyond
 Python + pip is needed on the playing machine.
 
+On Windows you can also double-click `launch\KeyPlay.bat` (or make a desktop
+shortcut to it) instead of using the terminal. It `cd`s to the repo, starts the
+server, and opens the browser; keep the window open while you play, close it to stop.
+
 ## Playing
 
 Two input layouts, toggle with **F9** or the **Split hands / Traditional** button:
