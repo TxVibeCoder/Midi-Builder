@@ -1,4 +1,4 @@
-import { codeToNote, zoneLabels, OCTAVE_SHIFT_RANGE, noteName } from "./keymap.js";
+import { codeToNote, codeToNoteTraditional, zoneLabels, traditionalLabels, OCTAVE_SHIFT_RANGE, noteName } from "./keymap.js";
 import { FEELS, feelById, computeVelocity } from "./feel.js";
 import { initAudio, noteOn, noteOff, allNotesOff, audioTime } from "./audio.js";
 import { Keyboard } from "./keyboard.js";
@@ -12,6 +12,7 @@ const DEFAULT_NOTE_LEN_BEATS = 1; // length of a click-added note before draggin
 const state = {
   octaveShifts: { L: 0, R: 0 },
   feels: { L: "lively", R: "lively" },
+  layout: "split", // "split" (two hands) | "traditional" (one keyboard, A = middle C)
   mode: "idle", // idle | record | play
   take: [],     // last committed take's notes
   showLabels: true,
@@ -45,7 +46,10 @@ function layout() {
 }
 
 function refreshLabels() {
-  keyboard.setLabels(state.showLabels ? zoneLabels(state.octaveShifts) : null);
+  if (!state.showLabels) { keyboard.setLabels(null); return; }
+  keyboard.setLabels(state.layout === "traditional"
+    ? traditionalLabels(state.octaveShifts.R)
+    : zoneLabels(state.octaveShifts));
 }
 
 // ---------- note input ----------
@@ -104,6 +108,17 @@ function shiftOctave(hand, delta) {
   updateStatus();
 }
 
+function toggleLayout() {
+  flushAllNotes(); // the mapping changes underfoot — release anything held
+  state.layout = state.layout === "split" ? "traditional" : "split";
+  if (state.layout === "traditional") state.feels.L = state.feels.R; // one feel for the whole keyboard
+  refreshLabels();
+  syncUi();
+  setStatus(state.layout === "traditional"
+    ? "Traditional layout — one keyboard, A = middle C"
+    : "Split layout — left & right hand zones");
+}
+
 window.addEventListener("keydown", (e) => {
   if (e.repeat || e.ctrlKey || e.altKey || e.metaKey) return;
   if (e.target instanceof Element && e.target.matches("input, textarea, select")) return;
@@ -117,6 +132,7 @@ window.addEventListener("keydown", (e) => {
   if (e.code === "Enter") { e.preventDefault(); startPlayback(); return; }
   if (e.code === "Escape") { state.selected = null; stopAll(); return; }
   if (e.code === "F10") { e.preventDefault(); recorder.metronome = !recorder.metronome; syncUi(); return; }
+  if (e.code === "F9") { e.preventDefault(); toggleLayout(); return; }
   if (e.code in FEEL_FKEYS) {
     e.preventDefault();
     const id = FEELS[FEEL_FKEYS[e.code]].id;
@@ -125,12 +141,16 @@ window.addEventListener("keydown", (e) => {
     syncUi();
     return;
   }
-  if (e.code === "ArrowLeft") { e.preventDefault(); shiftOctave("L", -1); return; }
-  if (e.code === "ArrowRight") { e.preventDefault(); shiftOctave("L", 1); return; }
+  // Octave: split → ←→ move LH, ↑↓ move RH. Traditional → any arrow moves the single octave.
+  const trad = state.layout === "traditional";
+  if (e.code === "ArrowLeft") { e.preventDefault(); shiftOctave(trad ? "R" : "L", -1); return; }
+  if (e.code === "ArrowRight") { e.preventDefault(); shiftOctave(trad ? "R" : "L", 1); return; }
   if (e.code === "ArrowDown") { e.preventDefault(); shiftOctave("R", -1); return; }
   if (e.code === "ArrowUp") { e.preventDefault(); shiftOctave("R", 1); return; }
 
-  const hit = codeToNote(e.code, state.octaveShifts);
+  const hit = trad
+    ? codeToNoteTraditional(e.code, state.octaveShifts.R)
+    : codeToNote(e.code, state.octaveShifts);
   if (hit) {
     e.preventDefault();
     pressNote(e.code, hit.hand, hit.note);
@@ -295,6 +315,8 @@ function feelChips(hand) {
 }
 
 function syncUi() {
+  const trad = state.layout === "traditional";
+  if (trad) state.feels.L = state.feels.R; // keep the single feel uniform
   $("chips-L").innerHTML = feelChips("L");
   $("chips-R").innerHTML = feelChips("R");
   $("rec").textContent = state.mode === "record" ? "■ Stop" : (isOverdub() ? "● Overdub" : "● Record");
@@ -302,13 +324,20 @@ function syncUi() {
   $("play").textContent = state.mode === "play" ? "■ Stop" : "▶ Play";
   $("metro").classList.toggle("active", recorder.metronome);
   $("overdub").classList.toggle("active", state.overdub);
+  $("layout").textContent = trad ? "⌨ Traditional" : "✋ Split hands";
+  $("group-L").classList.toggle("hidden", trad);
+  $("label-R").textContent = trad ? "Keyboard" : "Right hand";
   updateStatus();
 }
 
 function updateStatus() {
   const o = state.octaveShifts;
-  $("oct-L").textContent = `LH ${noteName(48 + o.L * 12)}  (←/→)`;
-  $("oct-R").textContent = `RH ${noteName(72 + o.R * 12)}  (↑/↓)`;
+  if (state.layout === "traditional") {
+    $("oct-R").textContent = `A = ${noteName(60 + o.R * 12)}  (←→ octave)`;
+  } else {
+    $("oct-L").textContent = `LH ${noteName(48 + o.L * 12)}  (←/→)`;
+    $("oct-R").textContent = `RH ${noteName(72 + o.R * 12)}  (↑/↓)`;
+  }
 }
 
 function setStatus(msg) {
@@ -319,6 +348,7 @@ document.addEventListener("click", (e) => {
   const chip = e.target.closest(".chip");
   if (chip) {
     state.feels[chip.dataset.hand] = chip.dataset.feel;
+    if (state.layout === "traditional") state.feels.L = state.feels.R = chip.dataset.feel;
     syncUi();
   }
 });
@@ -329,6 +359,7 @@ $("save").onclick = saveTake;
 $("discard").onclick = () => { state.take = []; state.selected = null; setStatus("take discarded"); };
 $("metro").onclick = () => { recorder.metronome = !recorder.metronome; syncUi(); };
 $("overdub").onclick = () => { state.overdub = !state.overdub; syncUi(); };
+$("layout").onclick = toggleLayout;
 $("labels").onclick = () => { state.showLabels = !state.showLabels; refreshLabels(); };
 $("roll").addEventListener("wheel", (e) => { e.preventDefault(); roll.zoom(e.deltaY > 0 ? -1 : 1); }, { passive: false });
 window.addEventListener("resize", layout);

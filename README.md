@@ -16,11 +16,20 @@ Python + pip is needed on the playing machine.
 
 ## Playing
 
+Two input layouts, toggle with **F9** or the **Split hands / Traditional** button:
+
+**Split hands** (default) — two zones, one per hand:
 - **Left hand**: Z-row is white keys (`z x c v b n m , . /`), A-row above it is
   the sharps (`s d g h j l ;`). Starts at C3.
 - **Right hand**: Q-row is white keys (`q w e r t y u i o p [ ]`), number row is
   the sharps (`2 3 5 6 7 9 0 =`). Starts at C5.
 - **Octaves**: `←`/`→` shift the left hand, `↑`/`↓` shift the right hand.
+- Each hand has its own feel preset; hands record to separate MIDI tracks.
+
+**Traditional** — one continuous keyboard, classic Ableton/tracker mapping starting
+at **A = middle C**: home row `a s d f g h j k l ;` = white keys, the row above
+(`w e   t y u   o p`) = the sharps. One octave control (any arrow key), one feel
+preset. Notes still split into bass/treble tracks at middle C on export.
 - **Feel presets** (`F5`–`F8`: Lively, Soft, Dramatic, Warm): typing keys carry no
   velocity, so the active preset generates it — base level, humanized jitter, and
   beat accents (when the click is on). Each note is stamped with the feel that was

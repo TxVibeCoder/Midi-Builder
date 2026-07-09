@@ -50,6 +50,8 @@ input, select {
 }
 .chip.active { background: var(--c); color: #17181c; font-weight: 600; }
 
+.hidden { display: none !important; }
+
 /* ---------- side panel ---------- */
 #side {
   position: absolute; top: 96px; right: 10px; z-index: 5;

@@ -25,6 +25,17 @@ export const NOTE_MIN = 21;   // sampled range (A0..C8)
 export const NOTE_MAX = 108;
 export const OCTAVE_SHIFT_RANGE = [-2, 2];
 
+// Traditional single-keyboard layout (classic Ableton/tracker style): one
+// continuous ~2.5-octave run starting at A = middle C, home row = white keys,
+// the row above = sharps. Used as an alternative to the two-hand split.
+export const TRADITIONAL_BASE = 60; // A = C4 (middle C)
+const TRAD_CODES = [
+  "KeyA", "KeyW", "KeyS", "KeyE", "KeyD", "KeyF", "KeyT", "KeyG", "KeyY", "KeyH", "KeyU", "KeyJ", // C..B
+  "KeyK", "KeyO", "KeyL", "KeyP", "Semicolon", "Quote", "BracketRight",                            // C..F# next octave
+];
+const TRAD_LOOKUP = new Map();
+TRAD_CODES.forEach((code, semis) => TRAD_LOOKUP.set(code, semis));
+
 const LOOKUP = new Map();
 for (const [hand, def] of Object.entries(HANDS)) {
   def.codes.forEach((code, semis) => LOOKUP.set(code, { hand, semis }));
@@ -40,6 +51,17 @@ export function codeToNote(code, octaveShifts) {
   return { hand: hit.hand, note };
 }
 
+// Traditional layout: one continuous keyboard, single octave shift. Hand is
+// assigned by pitch (split at middle C) purely so export still yields a
+// bass/treble track split.
+export function codeToNoteTraditional(code, octaveShift) {
+  const semis = TRAD_LOOKUP.get(code);
+  if (semis === undefined) return null;
+  const note = TRADITIONAL_BASE + 12 * octaveShift + semis;
+  if (note < NOTE_MIN || note > NOTE_MAX) return null;
+  return { hand: note < 60 ? "L" : "R", note };
+}
+
 export function isBlack(note) {
   return [1, 3, 6, 8, 10].includes(note % 12);
 }
@@ -53,7 +75,7 @@ export function noteName(note) {
 export function codeLabel(code) {
   if (code.startsWith("Key")) return code.slice(3);
   if (code.startsWith("Digit")) return code.slice(5);
-  return { Comma: ",", Period: ".", Semicolon: ";", Slash: "/", BracketLeft: "[", BracketRight: "]", Equal: "=" }[code] || "";
+  return { Comma: ",", Period: ".", Semicolon: ";", Slash: "/", BracketLeft: "[", BracketRight: "]", Equal: "=", Quote: "'" }[code] || "";
 }
 
 // hand -> map of currently reachable note -> code label (for keyboard overlay)
@@ -65,5 +87,15 @@ export function zoneLabels(octaveShifts) {
       out[note] = { hand, label: codeLabel(code) };
     });
   }
+  return out;
+}
+
+// Traditional-layout key hints: one continuous run from A, all one colour.
+export function traditionalLabels(octaveShift) {
+  const out = {};
+  TRAD_CODES.forEach((code, semis) => {
+    const note = TRADITIONAL_BASE + 12 * octaveShift + semis;
+    out[note] = { hand: "R", label: codeLabel(code) };
+  });
   return out;
 }
