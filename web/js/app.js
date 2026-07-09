@@ -36,8 +36,8 @@ function layout() {
   const kbdH = Math.min(190, Math.max(120, window.innerHeight * 0.22));
   $("keys").style.height = `${kbdH}px`;
   keyboard.render(width, kbdH);
-  roll.columnFor = (n) => keyboard.columnFor(n);
-  strip.columnFor = (n) => keyboard.columnFor(n);
+  roll.columnFor = (n) => keyboard.rollColumnFor(n); // narrowed top-of-key lanes (no overlap)
+  strip.columnFor = (n) => keyboard.columnFor(n);    // labels stay centered over full keys
   strip.resize(width, $("notestrip").clientHeight);
   const rollH = $("roll").parentElement.clientHeight;
   roll.resize(width, rollH);

@@ -19,7 +19,7 @@ export function buildGeometry(totalWidth, whiteHeight) {
   const blackW = whiteW * BLACK_W_RATIO;
   const blackH = whiteHeight * BLACK_H_RATIO;
 
-  const geo = new Map(); // note -> {x, w, black}
+  const geo = new Map(); // note -> {x, w, black} — key shapes at their WIDEST (base)
   whites.forEach((n, i) => geo.set(n, { x: i * whiteW, w: whiteW, black: false }));
   for (let n = KBD_LO; n <= KBD_HI; n++) {
     if (!isBlack(n)) continue;
@@ -28,7 +28,24 @@ export function buildGeometry(totalWidth, whiteHeight) {
     const lean = BLACK_LEAN[n % 12] || 0;
     geo.set(n, { x: boundary - blackW / 2 + lean * blackW, w: blackW, black: true });
   }
-  return { geo, whiteW, blackW, blackH, whiteH: whiteHeight };
+
+  // Roll columns: each key's width at the TOP of the keyboard, where the black
+  // keys carve into the white keys. White lanes fill exactly the gaps between the
+  // black lanes, so roll notes tile the top edge with no overlap. (The white keys
+  // are wider at their base, but the roll meets the keyboard at the top — aligning
+  // notes to the base width made white notes spill over the black keys.)
+  const rollGeo = new Map();
+  for (let n = KBD_LO; n <= KBD_HI; n++) {
+    const base = geo.get(n);
+    if (!base) continue;
+    if (base.black) { rollGeo.set(n, { x: base.x, w: base.w, black: true }); continue; }
+    const lb = geo.get(n - 1), rb = geo.get(n + 1);
+    const left = lb && lb.black ? lb.x + lb.w : base.x;
+    const right = rb && rb.black ? rb.x : base.x + base.w;
+    rollGeo.set(n, { x: left, w: right - left, black: false });
+  }
+
+  return { geo, rollGeo, whiteW, blackW, blackH, whiteH: whiteHeight };
 }
 
 export class Keyboard {
@@ -148,6 +165,12 @@ export class Keyboard {
 
   columnFor(note) {
     return this.geometry.geo.get(note) || null;
+  }
+
+  // Column for the vertical roll: narrowed to the key's top-of-keyboard width so
+  // notes tile without overlapping the black keys. See buildGeometry's rollGeo.
+  rollColumnFor(note) {
+    return this.geometry.rollGeo.get(note) || null;
   }
 
   titleFor(note) {
